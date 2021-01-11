@@ -15,10 +15,10 @@ binseg_normal <- structure(function # Binary segmentation, normal change in mean
     segments=1:max.segments,##<< number of parameters
     loss,##<< square loss
     end=end+1L,##<< index of last data point per segment
-    before.mean,##<< mean before changepoint
-    after.mean=ifelse(after.mean==Inf, NA, after.mean),##<< mean after changepoint
-    before.var,
-    after.var=ifelse(after.var==Inf, NA, after.var),
+    # before.mean,##<< mean before changepoint
+    # after.mean=ifelse(after.mean==Inf, NA, after.mean),##<< mean after changepoint
+    before.meanvar,
+    after.meanvar=ifelse(after.var==Inf, NA, after.meanvar),
     before.size,##<< number of data before changepoint
     after.size=na(after.size),##<< number of data after changepoint
     invalidates.index=na(invalidates.index+1L),##<< index of model parameter no longer used after this changepoint is used
@@ -91,7 +91,7 @@ coef.binseg_normal <- function
   ...
 ### ignored.
 ){
-  before.mean <- after.mean <- before.var <- after.var <- end <- 
+  before.var <- after.var <- end <- 
     invalidates.after <- invalidates.index <- NULL
   kmax <- nrow(object)
   if(!(
@@ -106,17 +106,20 @@ coef.binseg_normal <- function
   data.table(segments)[, {
     i <- 1:segments
     cum.fit <- object[i]
-    means <- cum.fit[, c(before.mean, after.mean)]
-    means[
+    # means <- cum.fit[, c(before.mean, after.mean)]
+    # means[
+    #   cum.fit[, .N*invalidates.after+invalidates.index]
+    # ] <- NA
+    meanvars <- cum.fit[, c(before.meanvar, after.meanvar)]
+    meanvars[
       cum.fit[, .N*invalidates.after+invalidates.index]
     ] <- NA
-    vars <- cum.fit[, c(before,var, after.var)]
     ord <- order(cum.fit$end)
-    mean.mat <- matrix(means, 2, byrow=TRUE)[, ord]
+    meanvar.mat <- matrix(meanvars, 2, byrow=TRUE)[, ord]
     cum.fit[ord, data.table(
       start=c(1L, end[-.N]+1L),
       end,
-      mean=mean.mat[!is.na(mean.mat)]
+      meanvar=meanvar.mat[!is.na(meanvar.mat)]
     )]
   }, by="segments"]
 ### data.table with one row for each segment.

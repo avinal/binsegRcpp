@@ -5,8 +5,7 @@
 int binseg_normal
 (const double *data_vec, const int n_data, const int max_segments,
  int *seg_end, double *cost,
- double *before_mean, double *after_mean,
- double *before_var, double *after_var,
+ double *before_meanvar, double *after_meanvar,
  int *, int *,
  int *invalidates_index, int *invalidates_before);
 
