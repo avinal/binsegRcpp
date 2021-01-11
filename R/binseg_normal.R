@@ -91,7 +91,7 @@ coef.binseg_normal <- function
   ...
 ### ignored.
 ){
-  before.mean <- after.mean <- before.var <- after.var end <- 
+  before.mean <- after.mean <- before.var <- after.var <- end <- 
     invalidates.after <- invalidates.index <- NULL
   kmax <- nrow(object)
   if(!(
