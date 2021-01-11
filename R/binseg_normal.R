@@ -17,6 +17,8 @@ binseg_normal <- structure(function # Binary segmentation, normal change in mean
     end=end+1L,##<< index of last data point per segment
     before.mean,##<< mean before changepoint
     after.mean=ifelse(after.mean==Inf, NA, after.mean),##<< mean after changepoint
+    before.var,
+    after.var=ifelse(after.var==Inf, NA, after.var),
     before.size,##<< number of data before changepoint
     after.size=na(after.size),##<< number of data after changepoint
     invalidates.index=na(invalidates.index+1L),##<< index of model parameter no longer used after this changepoint is used

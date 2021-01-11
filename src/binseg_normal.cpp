@@ -8,9 +8,9 @@
 // one parameter (mean) because the model is normal change in mean
 // with constant variance but there could be more parameters for other
 // models (e.g., normal change in mean and variance).
-class MeanCost {
+class MeanVarCost {
 public:
-  double mean, cost;
+  double mean, var, cost;
 };
 
 // This class computes and stores the statistics that we need to
@@ -20,13 +20,17 @@ public:
 class Cumsums {
 public:
   std::vector<double> cumsum_vec;
+  std::vector<double> sqr_cumsum_vec;
   // computes the cumulative sum vector in linear O(n_data) time.
   void init(const double *data_vec, const int n_data){
     cumsum_vec.resize(n_data);
     double total = 0.0;
+    double sqr_total = 0.0;
     for(int data_i=0; data_i<n_data; data_i++){
       total += data_vec[data_i];
       cumsum_vec[data_i] = total;
+      sqr_total += pow(data_vec[data_i], 2);
+      sqr_cumsum_vec[data_i] = sqr_total;
     }
   }
   double get_sum(int first, int last){
@@ -36,17 +40,31 @@ public:
     }
     return total;
   }
+  double get_sqr_sum(int first, int last){
+    double total = sqr_cumsum_vec[last];
+    if(0 < first){
+      total -= sqr_cumsum_vec[first-1];
+    }
+    return total;
+  }
   // Compute/store optimal mean and cost values for a single segment
   // from first to last in constant O(1) time.
-  void first_last_mean_cost
-  (int first, int last, double *mean, double *cost){
+  void first_last_meanvar_cost
+  (int first, int last, double *mean, double *var, double *cost){
     double s = get_sum(first, last);
+    double ss = get_sqr_sum(first, last);
     int N = last-first+1;
-    *cost = -s*s/N;
+    double meancost = ss - s*s/N;
+    if(meancost < 0){
+      meancost = 0.00000000001;
+    }
+    *cost = N*(log(2*M_PI) + log(meancost/N) + 1);
+    // *cost = -s*s/N;
     *mean = s/N;
+    *var = ss/N - pow(*mean, 2);
   }
-  void first_last_mean_cost(int first, int last, MeanCost *mc){
-    first_last_mean_cost(first, last, &(mc->mean), &(mc->cost));
+  void first_last_meanvar_cost(int first, int last, MeanVarCost *mc){
+    first_last_meanvar_cost(first, last, &(mc->mean), &(mc->var), &(mc->cost));
   }
 };
 /* Above we compute the optimal square loss for a segment with sum of
@@ -72,12 +90,12 @@ public:
 class Split {
 public:
   int this_end;//index of last data point on the first/before segment.
-  MeanCost before, after;
-  double set_mean_cost
+  MeanVarCost before, after;
+  double set_meanvar_cost
   (Cumsums &cumsums, int first, int end_i, int last){
     this_end = end_i;
-    cumsums.first_last_mean_cost(first, end_i, &before);
-    cumsums.first_last_mean_cost(end_i+1, last, &after);
+    cumsums.first_last_meanvar_cost(first, end_i, &before);
+    cumsums.first_last_meanvar_cost(end_i+1, last, &after);
     return before.cost + after.cost;
   }
 };
@@ -119,7 +137,7 @@ public:
     double best_cost_split = INFINITY, cost_split;
     // for loop over all possible splits on this Segment.
     for(int ci=0; ci<n_candidates; ci++){
-      cost_split = candidate_split.set_mean_cost
+      cost_split = candidate_split.set_meanvar_cost
 	(cumsums, first, first+ci, last);
       if(cost_split < best_cost_split){
 	best_cost_split = cost_split;
@@ -171,6 +189,7 @@ int binseg_normal
 (const double *data_vec, const int n_data, const int max_segments,
  int *seg_end, double *cost,
  double *before_mean, double *after_mean, 
+ double *before_var, double *after_var,
  int *before_size, int *after_size, 
  int *invalidates_index, int *invalidates_after){
   if(n_data < max_segments){
@@ -181,11 +200,12 @@ int binseg_normal
   V.cumsums.init(data_vec, n_data);
   // Then store the trivial segment mean/cost (which starts at the
   // first and ends at the last data point).
-  V.cumsums.first_last_mean_cost
-    (0, n_data-1, before_mean, cost);
+  V.cumsums.first_last_meanvar_cost
+    (0, n_data-1, before_mean, before_var, cost);
   before_size[0] = n_data;
   seg_end[0] = n_data-1;
   after_mean[0] = INFINITY;
+  after_var[0] = INFINITY;
   after_size[0] = -2; // unused/missing indicator.
   invalidates_index[0]=-2;
   invalidates_after[0]=-2;
@@ -206,6 +226,8 @@ int binseg_normal
     seg_end[seg_i] = s->best_split.this_end;
     before_mean[seg_i] = s->best_split.before.mean;
     after_mean[seg_i] = s->best_split.after.mean;
+    before_var[seg_i] = s->best_split.before.var;
+    after_var[seg_i] = s->best_split.after.var;
     // Also store invalidates index/after so we know which previous
     // model parameters are no longer used because of this split.
     invalidates_index[seg_i] = s->invalidates_index;
