@@ -110,6 +110,7 @@ coef.binseg_normal <- function
     means[
       cum.fit[, .N*invalidates.after+invalidates.index]
     ] <- NA
+    vars <- cum.fit[, c(before,var, after.var)]
     ord <- order(cum.fit$end)
     mean.mat <- matrix(means, 2, byrow=TRUE)[, ord]
     cum.fit[ord, data.table(

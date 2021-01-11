@@ -54,11 +54,11 @@ public:
     double s = get_sum(first, last);
     double ss = get_sqr_sum(first, last);
     int N = last-first+1;
-    double meancost = ss - s*s/N;
+    double meancost = (ss - s*s/N)/N;
     if(meancost <= 0){
       meancost = 0.00000000001;
     }
-    *cost = N*(log(2*M_PI) + log(meancost/N) + 1);
+    *cost = N*(log(2*M_PI) + log(meancost) + 1);
     // *cost = -s*s/N;
     *mean = s/N;
     *var = ss/N - pow(s/N, 2);
