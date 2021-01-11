@@ -55,13 +55,13 @@ public:
     double ss = get_sqr_sum(first, last);
     int N = last-first+1;
     double meancost = ss - s*s/N;
-    if(meancost < 0){
+    if(meancost <= 0){
       meancost = 0.00000000001;
     }
     *cost = N*(log(2*M_PI) + log(meancost/N) + 1);
     // *cost = -s*s/N;
     *mean = s/N;
-    *var = ss/N - pow(*mean, 2);
+    *var = ss/N - pow(s/N, 2);
   }
   void first_last_meanvar_cost(int first, int last, MeanVarCost *mc){
     first_last_meanvar_cost(first, last, &(mc->mean), &(mc->var), &(mc->cost));

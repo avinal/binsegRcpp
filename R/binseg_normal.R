@@ -13,7 +13,7 @@ binseg_normal <- structure(function # Binary segmentation, normal change in mean
   ##value<< data.table with a row for each model and columns
   dt <- with(result, data.table(
     segments=1:max.segments,##<< number of parameters
-    loss=sum(data.vec^2)+loss,##<< square loss
+    loss,##<< square loss
     end=end+1L,##<< index of last data point per segment
     before.mean,##<< mean before changepoint
     after.mean=ifelse(after.mean==Inf, NA, after.mean),##<< mean after changepoint
@@ -91,7 +91,7 @@ coef.binseg_normal <- function
   ...
 ### ignored.
 ){
-  before.mean <- after.mean <- end <- 
+  before.mean <- after.mean <- before.var <- after.var end <- 
     invalidates.after <- invalidates.index <- NULL
   kmax <- nrow(object)
   if(!(
