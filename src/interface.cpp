@@ -16,6 +16,8 @@ Rcpp::List rcpp_binseg_normal
   Rcpp::NumericVector loss(kmax);
   Rcpp::NumericVector before_mean(kmax);
   Rcpp::NumericVector after_mean(kmax);
+  Rcpp::NumericVector before_var(kmax);
+  Rcpp::NumericVector after_var(kmax);
   Rcpp::IntegerVector before_size(kmax);
   Rcpp::IntegerVector after_size(kmax);
   Rcpp::IntegerVector invalidates_index(kmax);
@@ -25,6 +27,7 @@ Rcpp::List rcpp_binseg_normal
      //inputs above, outputs below.
      &end[0], &loss[0],
      &before_mean[0], &after_mean[0],
+     &before_var[0], &after_var[0],
      &before_size[0], &after_size[0],
      &invalidates_index[0], &invalidates_after[0]);
   if(status == ERROR_TOO_MANY_SEGMENTS){
@@ -35,6 +38,8 @@ Rcpp::List rcpp_binseg_normal
      Rcpp::Named("end", end),
      Rcpp::Named("before.mean", before_mean),
      Rcpp::Named("after.mean", after_mean),
+     Rcpp::Named("before.var", before_var),
+     Rcpp::Named("after.var", after_var),
      Rcpp::Named("before.size", before_size),
      Rcpp::Named("after.size", after_size),
      Rcpp::Named("invalidates.index", invalidates_index),
